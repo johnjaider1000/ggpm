@@ -11,5 +11,5 @@ npm version patch && npm run bundle && npm publish --access=public
 
 # Verify Publication
 ```bash
-npm info @korautils/forms
+npm info ggpm
 ```
