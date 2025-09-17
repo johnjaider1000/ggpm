@@ -206,6 +206,7 @@ Configuration:
 
   private logEachSuggestion(failedPackages: any[]): void {
     failedPackages.forEach(pkg => this.logSingleSuggestion(pkg));
+    this.showInstallationCommands(failedPackages);
     console.log("");
   }
 
@@ -216,6 +217,17 @@ Configuration:
       () => console.log(`   ${pkg.name}: ${pkg.requestedVersion} → ${pkg.suggestedVersion}`),
       () => console.log(`   ${pkg.name}: No valid version found that meets the age requirement`)
     );
+  }
+
+  private showInstallationCommands(failedPackages: any[]): void {
+    const packagesWithSuggestions = failedPackages.filter(pkg => pkg.suggestedVersion);
+    
+    this.executeConditionally(packagesWithSuggestions.length > 0, () => {
+      console.log("\n🚀 Installation commands:");
+      packagesWithSuggestions.forEach(pkg => {
+        console.log(`   ggpm i ${pkg.name}@${pkg.suggestedVersion}`);
+      });
+    });
   }
 
   private executeConditionally(condition: boolean, onTrue: () => void, onFalse?: () => void): void {
