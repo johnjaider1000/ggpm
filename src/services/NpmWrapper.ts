@@ -197,7 +197,6 @@ Configuration:
     const shouldShowHeader = hasSuggestions;
     
     this.executeConditionally(shouldShowHeader, () => {
-      console.log("\n");
       console.log("-".repeat(3));
       console.log("\n");
       console.log("💡 Suggested versions that meet the minimum age requirement:\n");
