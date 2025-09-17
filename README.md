@@ -41,7 +41,7 @@ GGPM uses the standard `.npmrc` file for configuration. Create or update your `.
 
 ```ini
 # Minimum release age in days
-minimum-release-age=30
+minimum-release-age=7
 ```
 
 **Configuration Options:**
@@ -74,16 +74,16 @@ minimum-release-age=365
 
 ### Example Workflow
 ```bash
-# This will validate that lodash is at least 30 days old before installing
+# This will validate that lodash is at least 7 days old before installing
 ggpm install lodash
 
 # If the package is too recent, installation will be blocked
-# ❌ lodash@4.17.21 es demasiado reciente (15 días). Mínimo requerido: 30 días
-# ❌ Instalación bloqueada por paquetes demasiado recientes
+# ❌ lodash@4.17.21 is too recent (3 days). Minimum required: 7 days
+# ❌ Installation blocked by packages that are too recent
 
 # If the package meets age requirements, installation proceeds normally
-# ✅ lodash cumple con la edad mínima requerida
-# ✅ Todos los paquetes son válidos, procediendo con la instalación...
+# ✅ lodash meets the minimum age requirement
+# ✅ All packages are valid, proceeding with installation...
 ```
 
 ## Package Manager Detection Priority
