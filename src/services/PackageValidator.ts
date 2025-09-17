@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-import { IPackageValidator, PackageData } from "../interfaces/IPackageValidator";
+import { IPackageValidator, PackageData, ValidationResult, FailedPackage } from "../interfaces/IPackageValidator";
 import { IPackageInfoFetcher } from "../interfaces/IPackageInfoFetcher";
 import { IConfigurationReader } from "../interfaces/IConfigurationReader";
 import { IPackageAgeCalculator } from "../interfaces/IPackageAgeCalculator";
@@ -33,12 +33,25 @@ export class PackageValidator implements IPackageValidator {
     return false;
   }
 
-  async validatePackages(packages: PackageData[]): Promise<boolean> {
-    const validationResults = await Promise.all(
-      packages.map(pkg => this.validatePackage(pkg.name, pkg.version))
-    );
+  async validatePackages(packages: PackageData[]): Promise<ValidationResult> {
+    const failedPackages: FailedPackage[] = [];
+    
+    for (const pkg of packages) {
+      const isValid = await this.validatePackage(pkg.name, pkg.version);
+      if (!isValid) {
+        const suggestedVersion = await this.findValidVersion(pkg.name, pkg.version);
+        failedPackages.push({
+          name: pkg.name,
+          requestedVersion: pkg.version,
+          suggestedVersion
+        });
+      }
+    }
 
-    return validationResults.every(result => result === true);
+    return {
+      isValid: failedPackages.length === 0,
+      failedPackages
+    };
   }
 
   async validateAllPackagesInProject(): Promise<void> {
@@ -194,5 +207,30 @@ export class PackageValidator implements IPackageValidator {
     const age = this.calculatePackageAge(latestInfo, packageInfo, latestVersion);
 
     return this.validateAge(packageName, latestVersion, age, minimumAge);
+  }
+
+  private async findValidVersion(packageName: string, requestedVersion: string): Promise<string | undefined> {
+    try {
+      const packageInfo = await this.packageInfoFetcher.fetchPackageInfo(packageName);
+      const minimumAge = this.configurationReader.getMinimumReleaseAge();
+      
+      // Obtener todas las versiones ordenadas de más reciente a más antigua
+      const allVersions = Object.keys(packageInfo.versions);
+      const sortedVersions = this.sortVersions(allVersions).reverse();
+      
+      // Buscar la versión más reciente que pase el umbral
+      for (const version of sortedVersions) {
+        const versionInfo = packageInfo.versions[version];
+        const age = this.calculatePackageAge(versionInfo, packageInfo, version);
+        
+        if (age >= minimumAge) {
+          return version;
+        }
+      }
+      
+      return undefined;
+    } catch (error) {
+      return undefined;
+    }
   }
 }

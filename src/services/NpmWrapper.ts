@@ -4,7 +4,7 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-import { PackageData } from "../interfaces/IPackageValidator";
+import { PackageData, ValidationResult } from "../interfaces/IPackageValidator";
 import { IPackageValidator } from "../interfaces/IPackageValidator";
 import { PackageValidatorFactory } from "../factories/PackageValidatorFactory";
 import { AppConfig } from "../config/AppConfig";
@@ -161,28 +161,66 @@ Configuration:
       const packageJsonPackages = this.extractPackagesFromPackageJson();
       if (packageJsonPackages.length > 0) {
         console.log("📦 No packages specified, validating existing package.json dependencies...\n");
-        const isValid = await this.packageValidator.validatePackages(packageJsonPackages);
-        return isValid 
+        const result = await this.packageValidator.validatePackages(packageJsonPackages);
+        return result.isValid 
           ? this.logValidationSuccess()
-          : this.handleValidationFailure();
+          : this.handleValidationFailure(result.failedPackages);
       }
       return; // No hay paquetes que validar
     }
 
-    const isValid = await this.packageValidator.validatePackages(packages);
+    const result = await this.packageValidator.validatePackages(packages);
     
-    return isValid 
+    return result.isValid 
       ? this.logValidationSuccess()
-      : this.handleValidationFailure();
+      : this.handleValidationFailure(result.failedPackages);
   }
 
   private logValidationSuccess(): void {
     console.log("\n✅ All packages are valid, proceeding with installation...\n");
   }
 
-  private handleValidationFailure(): never {
-    console.error("\n❌ Installation blocked by packages that are too recent");
+  private handleValidationFailure(failedPackages: any[]): never {
+    console.error("\n❌ Installation blocked by packages that are too recent\n");
+    this.showSuggestedVersions(failedPackages);
     process.exit(1);
+  }
+
+  private showSuggestedVersions(failedPackages: any[]): void {
+    const hasSuggestions = failedPackages.length > 0;
+    
+    this.logSuggestionsHeader(hasSuggestions);
+    this.logEachSuggestion(failedPackages);
+  }
+
+  private logSuggestionsHeader(hasSuggestions: boolean): void {
+    const shouldShowHeader = hasSuggestions;
+    
+    this.executeConditionally(shouldShowHeader, () => {
+      console.log("\n");
+      console.log("-".repeat(3));
+      console.log("\n");
+      console.log("💡 Suggested versions that meet the minimum age requirement:\n");
+    });
+  }
+
+  private logEachSuggestion(failedPackages: any[]): void {
+    failedPackages.forEach(pkg => this.logSingleSuggestion(pkg));
+    console.log("");
+  }
+
+  private logSingleSuggestion(pkg: any): void {
+    const hasSuggestedVersion = Boolean(pkg.suggestedVersion);
+    
+    this.executeConditionally(hasSuggestedVersion, 
+      () => console.log(`   ${pkg.name}: ${pkg.requestedVersion} → ${pkg.suggestedVersion}`),
+      () => console.log(`   ${pkg.name}: No valid version found that meets the age requirement`)
+    );
+  }
+
+  private executeConditionally(condition: boolean, onTrue: () => void, onFalse?: () => void): void {
+    const action = condition ? onTrue : onFalse;
+    action?.();
   }
 
   private extractPackagesFromArgs(args: string[]): PackageData[] {
