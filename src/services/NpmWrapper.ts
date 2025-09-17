@@ -51,6 +51,12 @@ export class NpmWrapper {
       return;
     }
 
+    // Si no hay argumentos, mostrar ayuda
+    if (args.length === 0) {
+      this.showHelp();
+      return;
+    }
+
     const packageManager = this.getPackageManagerFromCommand(commandName);
     const isInstallCommand = this.isInstallCommand(args);
 
@@ -125,8 +131,18 @@ Configuration:
   private async validatePackagesBeforeInstall(args: string[]): Promise<void> {
     const packages = this.extractPackagesFromArgs(args);
 
-    const hasPackagesToValidate = packages.length > 0;
-    if (!hasPackagesToValidate) return;
+    // Si no hay paquetes especificados en el comando, validar el package.json existente
+    if (packages.length === 0) {
+      const packageJsonPackages = this.extractPackagesFromPackageJson();
+      if (packageJsonPackages.length > 0) {
+        console.log("📦 No packages specified, validating existing package.json dependencies...\n");
+        const isValid = await this.packageValidator.validatePackages(packageJsonPackages);
+        return isValid 
+          ? this.logValidationSuccess()
+          : this.handleValidationFailure();
+      }
+      return; // No hay paquetes que validar
+    }
 
     const isValid = await this.packageValidator.validatePackages(packages);
     
@@ -182,6 +198,45 @@ Configuration:
       name: packageName,
       version: version || "latest",
     };
+  }
+
+  private extractPackagesFromPackageJson(): PackageData[] {
+    const packages: PackageData[] = [];
+    
+    try {
+      const packageJsonPath = path.join(process.cwd(), 'package.json');
+      
+      if (!fs.existsSync(packageJsonPath)) {
+        return packages;
+      }
+
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      
+      // Extraer dependencies
+      if (packageJson.dependencies) {
+        for (const [name, version] of Object.entries(packageJson.dependencies)) {
+          packages.push({
+            name,
+            version: version as string
+          });
+        }
+      }
+      
+      // Extraer devDependencies
+      if (packageJson.devDependencies) {
+        for (const [name, version] of Object.entries(packageJson.devDependencies)) {
+          packages.push({
+            name,
+            version: version as string
+          });
+        }
+      }
+      
+    } catch (error) {
+      console.warn("⚠️  Could not read package.json:", (error as Error).message);
+    }
+    
+    return packages;
   }
 
   private async executeCommand(packageManager: string, args: string[]): Promise<void> {
