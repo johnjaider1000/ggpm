@@ -57,6 +57,17 @@ export class NpmWrapper {
       return;
     }
 
+    // Validar parámetros inválidos
+    const invalidFlag = this.findInvalidFlag(args);
+    if (invalidFlag) {
+      console.error(`❌ Error: Unknown option '${invalidFlag}'`);
+      console.log("\nValid options:");
+      console.log("  --version, -v    Show version");
+      console.log("  --help, -h       Show help");
+      console.log("\nUse 'ggpm --help' for more information.");
+      process.exit(1);
+    }
+
     const packageManager = this.getPackageManagerFromCommand(commandName);
     const isInstallCommand = this.isInstallCommand(args);
 
@@ -70,6 +81,20 @@ export class NpmWrapper {
 
   private hasHelpFlag(args: string[]): boolean {
     return args.includes('--help') || args.includes('-h');
+  }
+
+  private findInvalidFlag(args: string[]): string | null {
+    const validFlags = ['--version', '-v', '--help', '-h'];
+    const installCommands = AppConfig.getInstallCommands();
+    
+    for (const arg of args) {
+      // Si empieza con - pero no es un flag válido y no es un comando de instalación
+      if (arg.startsWith('-') && !validFlags.includes(arg) && !installCommands.includes(arg)) {
+        return arg;
+      }
+    }
+    
+    return null;
   }
 
   private async processInstallCommand(isInstallCommand: boolean, args: string[]): Promise<void> {
