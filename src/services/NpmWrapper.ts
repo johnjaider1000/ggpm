@@ -217,7 +217,7 @@ Configuration:
         for (const [name, version] of Object.entries(packageJson.dependencies)) {
           packages.push({
             name,
-            version: version as string
+            version: this.cleanVersionPrefix(version as string)
           });
         }
       }
@@ -227,7 +227,7 @@ Configuration:
         for (const [name, version] of Object.entries(packageJson.devDependencies)) {
           packages.push({
             name,
-            version: version as string
+            version: this.cleanVersionPrefix(version as string)
           });
         }
       }
@@ -237,6 +237,11 @@ Configuration:
     }
     
     return packages;
+  }
+
+  private cleanVersionPrefix(version: string): string {
+    // Remover prefijos comunes de versiones: ^, ~, >=, <=, >, <, =
+    return version.replace(/^[\^~>=<]+/, '');
   }
 
   private async executeCommand(packageManager: string, args: string[]): Promise<void> {
