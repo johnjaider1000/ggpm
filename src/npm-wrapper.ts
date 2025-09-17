@@ -34,6 +34,8 @@ export class NpmWrapper {
     const packages = this.extractPackagesFromArgs(args);
 
     if (packages.length > 0) {
+      console.log("🔍 Validating packages before installation...\n");
+      
       const isValid = await this.packageValidator.validatePackages(packages);
 
       if (!isValid) {

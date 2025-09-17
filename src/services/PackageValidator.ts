@@ -30,8 +30,6 @@ export class PackageValidator implements IPackageValidator {
   }
 
   async validatePackages(packages: PackageData[]): Promise<boolean> {
-    console.log("🔍 Validating packages before installation...\n");
-
     let allValid = true;
 
     for (const pkg of packages) {
