@@ -16,14 +16,73 @@ export class NpmWrapper {
   }
 
   async run(args: string[] = process.argv.slice(2)): Promise<void> {
-    const command = process.argv[1];
+    const commandName = path.basename(process.argv[1]);
+    
+    // Handle version flag directly
+    if (args.includes('--version') || args.includes('-v')) {
+      console.log('1.0.2');
+      process.exit(0);
+    }
+
+    // Handle help flag
+    if (args.includes('--help') || args.includes('-h')) {
+      this.showHelp();
+      return;
+    }
+
+    const packageManager = this.getPackageManagerFromCommand(commandName);
     const isInstallCommand = this.isInstallCommand(args);
 
     if (isInstallCommand) {
+      console.log("🔍 Validating packages before installation...\n");
       await this.validatePackagesBeforeInstall(args);
     }
 
-    await this.executeCommand(command, args);
+    await this.executeCommand(packageManager, args);
+  }
+
+  private showHelp(): void {
+    console.log(`
+GGPM - Global Guardian Package Manager v1.0.2
+
+Usage:
+  ggpm <command> [options]     Auto-detect package manager
+  gnpm <command> [options]     Use npm
+  gpnpm <command> [options]    Use pnpm
+  gyarn <command> [options]    Use yarn
+  gbun <command> [options]     Use bun
+
+Options:
+  --version, -v    Show version
+  --help, -h       Show help
+
+Examples:
+  ggpm install lodash
+  gnpm install express
+  gpnpm add react
+  gyarn add vue
+  gbun install svelte
+
+Configuration:
+  Create .npmrc file with: minimum-release-age=7
+`);
+  }
+
+  private getPackageManagerFromCommand(commandName: string): string {
+    const commandMap: Record<string, string> = {
+      "gnpm": "npm",
+      "gpnpm": "pnpm", 
+      "gyarn": "yarn",
+      "gbun": "bun"
+    };
+
+    if (commandName === "ggpm") {
+      // Auto-detect package manager
+      const detector = new (require("./services/PackageManagerDetector").PackageManagerDetector)();
+      return detector.detect();
+    }
+
+    return commandMap[commandName] || "npm";
   }
 
   private isInstallCommand(args: string[]): boolean {
@@ -34,8 +93,6 @@ export class NpmWrapper {
     const packages = this.extractPackagesFromArgs(args);
 
     if (packages.length > 0) {
-      console.log("🔍 Validating packages before installation...\n");
-      
       const isValid = await this.packageValidator.validatePackages(packages);
 
       if (!isValid) {
@@ -75,14 +132,22 @@ export class NpmWrapper {
     return packages;
   }
 
-  private async executeCommand(command: string, args: string[]): Promise<void> {
-    const packageManager = path.basename(command);
-    const child = spawn(packageManager, args, {
+  private async executeCommand(packageManager: string, args: string[]): Promise<void> {
+    // Filter out wrapper commands and flags we handle internally
+    const filteredArgs = args.filter(arg => 
+      !['ggpm', 'gnpm', 'gpnpm', 'gyarn', 'gbun'].includes(arg) &&
+      !['--version', '-v', '--help', '-h'].includes(arg)
+    );
+    
+    // Don't execute if no valid command remains
+    if (filteredArgs.length === 0) {
+      return;
+    }
+    
+    spawn(packageManager, filteredArgs, {
       stdio: "inherit",
-      shell: true,
-    });
-
-    child.on("exit", (code: any) => {
+      shell: true
+    }).on("exit", (code) => {
       process.exit(code || 0);
     });
   }
@@ -96,9 +161,4 @@ export async function runWrapper(args: string[] = process.argv.slice(2)): Promis
 
 export async function main(): Promise<void> {
   await runWrapper();
-}
-
-// Solo ejecutar si es llamado directamente
-if (require.main === module) {
-  main().catch(console.error);
 }

@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
-const { runWrapper } = require("./npm-wrapper.js");
-import { ApplicationFactory } from "./factories/ApplicationFactory";
+import { NpmWrapper } from "./npm-wrapper";
 
 async function main(): Promise<void> {
   try {
-    const app = ApplicationFactory.create(runWrapper);
-    await app.run();
+    const wrapper = new NpmWrapper();
+    await wrapper.run();
   } catch (error) {
     console.error("❌ Error executing ggpm:", (error as Error).message);
     process.exit(1);
