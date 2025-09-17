@@ -20,26 +20,33 @@ export class NpmWrapper {
 
   private getVersion(): string {
     try {
-      const packageJsonPath = path.join(__dirname, '../package.json');
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-      return packageJson.version;
+      return this.readVersionFromPackageJson();
     } catch (error) {
-      // Fallback version if package.json can't be read
-      return '1.0.3';
+      return this.getFallbackVersion();
     }
+  }
+
+  private readVersionFromPackageJson(): string {
+    const packageJsonPath = path.join(__dirname, '../package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    return packageJson.version;
+  }
+
+  private getFallbackVersion(): string {
+    return '1.0.6';
   }
 
   async run(args: string[] = process.argv.slice(2)): Promise<void> {
     const commandName = path.basename(process.argv[1]);
     
-    // Handle version flag directly
-    if (args.includes('--version') || args.includes('-v')) {
+    const shouldShowVersion = this.hasVersionFlag(args);
+    if (shouldShowVersion) {
       console.log(this.version);
       process.exit(0);
     }
 
-    // Handle help flag
-    if (args.includes('--help') || args.includes('-h')) {
+    const shouldShowHelp = this.hasHelpFlag(args);
+    if (shouldShowHelp) {
       this.showHelp();
       return;
     }
@@ -47,12 +54,23 @@ export class NpmWrapper {
     const packageManager = this.getPackageManagerFromCommand(commandName);
     const isInstallCommand = this.isInstallCommand(args);
 
-    if (isInstallCommand) {
-      console.log("🔍 Validating packages before installation...\n");
-      await this.validatePackagesBeforeInstall(args);
-    }
-
+    await this.processInstallCommand(isInstallCommand, args);
     await this.executeCommand(packageManager, args);
+  }
+
+  private hasVersionFlag(args: string[]): boolean {
+    return args.includes('--version') || args.includes('-v');
+  }
+
+  private hasHelpFlag(args: string[]): boolean {
+    return args.includes('--help') || args.includes('-h');
+  }
+
+  private async processInstallCommand(isInstallCommand: boolean, args: string[]): Promise<void> {
+    if (!isInstallCommand) return;
+    
+    console.log("🔍 Validating packages before installation...\n");
+    await this.validatePackagesBeforeInstall(args);
   }
 
   private showHelp(): void {
@@ -90,13 +108,14 @@ Configuration:
       "gbun": "bun"
     };
 
-    if (commandName === "ggpm") {
-      // Auto-detect package manager
-      const detector = new (require("./PackageManagerDetector").PackageManagerDetector)();
-      return detector.detect();
-    }
+    return commandName === "ggpm" 
+      ? this.autoDetectPackageManager()
+      : commandMap[commandName] || "npm";
+  }
 
-    return commandMap[commandName] || "npm";
+  private autoDetectPackageManager(): string {
+    const detector = new (require("./PackageManagerDetector").PackageManagerDetector)();
+    return detector.detect();
   }
 
   private isInstallCommand(args: string[]): boolean {
@@ -106,59 +125,84 @@ Configuration:
   private async validatePackagesBeforeInstall(args: string[]): Promise<void> {
     const packages = this.extractPackagesFromArgs(args);
 
-    if (packages.length > 0) {
-      const isValid = await this.packageValidator.validatePackages(packages);
+    const hasPackagesToValidate = packages.length > 0;
+    if (!hasPackagesToValidate) return;
 
-      if (!isValid) {
-        console.error("\n❌ Installation blocked by packages that are too recent");
-        process.exit(1);
-      }
+    const isValid = await this.packageValidator.validatePackages(packages);
+    
+    return isValid 
+      ? this.logValidationSuccess()
+      : this.handleValidationFailure();
+  }
 
-      console.log("\n✅ All packages are valid, proceeding with installation...\n");
-    }
+  private logValidationSuccess(): void {
+    console.log("\n✅ All packages are valid, proceeding with installation...\n");
+  }
+
+  private handleValidationFailure(): never {
+    console.error("\n❌ Installation blocked by packages that are too recent");
+    process.exit(1);
   }
 
   private extractPackagesFromArgs(args: string[]): PackageData[] {
     const packages: PackageData[] = [];
     let foundInstallCommand = false;
 
-    for (let i = 0; i < args.length; i++) {
-      const arg = args[i];
+    for (const arg of args) {
+      foundInstallCommand = this.updateInstallCommandStatus(arg, foundInstallCommand);
+      
+      const shouldSkipArg = this.shouldSkipArgument(arg, foundInstallCommand);
+      if (shouldSkipArg) continue;
 
-      if (AppConfig.getInstallCommands().includes(arg)) {
-        foundInstallCommand = true;
-        continue;
-      }
-
-      if (arg.startsWith("-")) continue;
-      if (!foundInstallCommand) continue;
-
-      const packageMatch = arg.match(/^(@?[^@]+)(?:@(.+))?$/);
-      if (packageMatch) {
-        const [, packageName, version] = packageMatch;
-        packages.push({
-          name: packageName,
-          version: version || "latest",
-        });
+      const packageData = this.parsePackageArgument(arg);
+      if (packageData) {
+        packages.push(packageData);
       }
     }
 
     return packages;
   }
 
+  private updateInstallCommandStatus(arg: string, currentStatus: boolean): boolean {
+    return AppConfig.getInstallCommands().includes(arg) ? true : currentStatus;
+  }
+
+  private shouldSkipArgument(arg: string, foundInstallCommand: boolean): boolean {
+    return arg.startsWith("-") || !foundInstallCommand;
+  }
+
+  private parsePackageArgument(arg: string): PackageData | null {
+    const packageMatch = arg.match(/^(@?[^@]+)(?:@(.+))?$/);
+    
+    if (!packageMatch) return null;
+    
+    const [, packageName, version] = packageMatch;
+    return {
+      name: packageName,
+      version: version || "latest",
+    };
+  }
+
   private async executeCommand(packageManager: string, args: string[]): Promise<void> {
-    // Filter out wrapper commands and flags we handle internally
-    const filteredArgs = args.filter(arg => 
-      !['ggpm', 'gnpm', 'gpnpm', 'gyarn', 'gbun'].includes(arg) &&
-      !['--version', '-v', '--help', '-h'].includes(arg)
+    const filteredArgs = this.filterInternalArgs(args);
+    
+    const hasValidCommand = filteredArgs.length > 0;
+    if (!hasValidCommand) return;
+    
+    this.spawnPackageManagerProcess(packageManager, filteredArgs);
+  }
+
+  private filterInternalArgs(args: string[]): string[] {
+    const wrapperCommands = ['ggpm', 'gnpm', 'gpnpm', 'gyarn', 'gbun'];
+    const internalFlags = ['--version', '-v', '--help', '-h'];
+    
+    return args.filter(arg => 
+      !wrapperCommands.includes(arg) && !internalFlags.includes(arg)
     );
-    
-    // Don't execute if no valid command remains
-    if (filteredArgs.length === 0) {
-      return;
-    }
-    
-    spawn(packageManager, filteredArgs, {
+  }
+
+  private spawnPackageManagerProcess(packageManager: string, args: string[]): void {
+    spawn(packageManager, args, {
       stdio: "inherit",
       shell: true
     }).on("exit", (code) => {

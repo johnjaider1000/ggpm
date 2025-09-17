@@ -10,46 +10,64 @@ export class PackageManagerDetector {
   detect(): string {
     const cwd = process.cwd();
 
-    // Single Responsibility: Detectar por archivos de lock
     const packageManagerFromLockFile = this.detectFromLockFiles(cwd);
-    if (packageManagerFromLockFile) {
-      return packageManagerFromLockFile;
-    }
-
-    // Single Responsibility: Detectar por instalación disponible
-    return this.detectFromAvailableManagers();
+    
+    return packageManagerFromLockFile ?? this.detectFromAvailableManagers();
   }
 
   isInstalled(packageManager: string): boolean {
     try {
-      execSync(`${packageManager} --version`, { stdio: "ignore" });
-      return true;
+      return this.checkPackageManagerVersion(packageManager);
     } catch (error) {
       return false;
     }
   }
 
+  private checkPackageManagerVersion(packageManager: string): boolean {
+    execSync(`${packageManager} --version`, { stdio: "ignore" });
+    return true;
+  }
+
   private detectFromLockFiles(cwd: string): string | null {
     const lockFileMap = AppConfig.getLockFileMap();
+    
     for (const [lockFile, manager] of Object.entries(lockFileMap)) {
-      if (fs.existsSync(path.join(cwd, lockFile))) {
+      const lockFilePath = path.join(cwd, lockFile);
+      const lockFileExists = fs.existsSync(lockFilePath);
+      
+      if (lockFileExists) {
         return manager;
       }
     }
+    
     return null;
   }
 
   private detectFromAvailableManagers(): string {
-    // Open/Closed Principle: Fácil agregar nuevos gestores
-    const preferredManagers = AppConfig.getSupportedPackageManagers().slice(0, 2); // pnpm, npm
+    const preferredManagers = this.getPreferredManagers();
     
-    for (const manager of preferredManagers) {
-      if (this.isInstalled(manager)) {
+    const installedManager = this.findFirstInstalledManager(preferredManagers);
+    
+    return installedManager ?? this.getFallbackManager();
+  }
+
+  private getPreferredManagers(): string[] {
+    return AppConfig.getSupportedPackageManagers().slice(0, 2);
+  }
+
+  private findFirstInstalledManager(managers: string[]): string | null {
+    for (const manager of managers) {
+      const isManagerInstalled = this.isInstalled(manager);
+      
+      if (isManagerInstalled) {
         return manager;
       }
     }
+    
+    return null;
+  }
 
-    // Fallback a npm (siempre disponible con Node.js)
+  private getFallbackManager(): string {
     return "npm";
   }
 }
