@@ -2,14 +2,17 @@ import { ICommandMapper } from "../interfaces/ICommandMapper";
 import { IPackageManagerDetector } from "../interfaces/IPackageManagerDetector";
 
 export class CommandMapper implements ICommandMapper {
-  private readonly commandMap: { [key: string]: string } = {
-    "g/npm": "npm",
-    "g/pnpm": "pnpm",
-    "g/yarn": "yarn",
-    "g/bun": "bun",
+  private readonly packageManagerDetector: IPackageManagerDetector;
+  private readonly commandMap = {
+    "gnpm": "npm",
+    "gpnpm": "pnpm", 
+    "gyarn": "yarn",
+    "gbun": "bun"
   };
 
-  constructor(private packageManagerDetector: IPackageManagerDetector) {}
+  constructor(packageManagerDetector: IPackageManagerDetector) {
+    this.packageManagerDetector = packageManagerDetector;
+  }
 
   mapCommandToPackageManager(commandName: string): string {
     // Dependency Inversion: Depende de abstracción, no de implementación concreta

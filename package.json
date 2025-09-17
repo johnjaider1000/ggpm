@@ -10,10 +10,10 @@
   },
   "bin": {
     "ggpm": "./dist/index.js",
-    "g/pnpm": "./dist/index.js",
-    "g/npm": "./dist/index.js",
-    "g/yarn": "./dist/index.js",
-    "g/bun": "./dist/index.js"
+    "gnpm": "./dist/index.js",
+    "gpnpm": "./dist/index.js",
+    "gyarn": "./dist/index.js",
+    "gbun": "./dist/index.js"
   },
   "keywords": [
     "ggpm",

@@ -29,10 +29,10 @@ After global installation, use GGPM commands instead of direct package manager c
 ggpm install lodash
 
 # Specific package manager wrappers
-g/npm install express
-g/yarn add react
-g/pnpm install vue
-g/bun add svelte
+gnpm install express
+gyarn add react
+gpnpm install vue
+gbun add svelte
 ```
 
 ### Configuration
