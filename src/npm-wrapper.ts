@@ -2,6 +2,7 @@
 
 const { spawn } = require("child_process");
 const path = require("path");
+const fs = require("fs");
 
 import { PackageData } from "./interfaces/IPackageValidator";
 import { IPackageValidator } from "./interfaces/IPackageValidator";
@@ -10,9 +11,22 @@ import { AppConfig } from "./config/AppConfig";
 
 export class NpmWrapper {
   private readonly packageValidator: IPackageValidator;
+  private version: string;
 
   constructor(packageValidator?: IPackageValidator) {
     this.packageValidator = packageValidator || PackageValidatorFactory.create();
+    this.version = this.getVersion();
+  }
+
+  private getVersion(): string {
+    try {
+      const packageJsonPath = path.join(__dirname, '../package.json');
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+      return packageJson.version;
+    } catch (error) {
+      // Fallback version if package.json can't be read
+      return '1.0.3';
+    }
   }
 
   async run(args: string[] = process.argv.slice(2)): Promise<void> {
@@ -20,7 +34,7 @@ export class NpmWrapper {
     
     // Handle version flag directly
     if (args.includes('--version') || args.includes('-v')) {
-      console.log('1.0.2');
+      console.log(this.version);
       process.exit(0);
     }
 
@@ -43,7 +57,7 @@ export class NpmWrapper {
 
   private showHelp(): void {
     console.log(`
-GGPM - Global Guardian Package Manager v1.0.2
+GGPM - Global Guardian Package Manager v${this.version}
 
 Usage:
   ggpm <command> [options]     Auto-detect package manager
