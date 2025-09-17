@@ -146,14 +146,23 @@ Configuration:
 
   private extractPackagesFromArgs(args: string[]): PackageData[] {
     const packages: PackageData[] = [];
-    let foundInstallCommand = false;
+    const installCommands = AppConfig.getInstallCommands();
+    
+    // Find the index of the install command
+    const installCommandIndex = args.findIndex(arg => installCommands.includes(arg));
+    
+    // If no install command found, return empty array
+    if (installCommandIndex === -1) {
+      return packages;
+    }
 
-    for (const arg of args) {
-      foundInstallCommand = this.updateInstallCommandStatus(arg, foundInstallCommand);
+    // Extract packages from arguments after the install command
+    for (let i = installCommandIndex + 1; i < args.length; i++) {
+      const arg = args[i];
       
-      const shouldSkipArg = this.shouldSkipArgument(arg, foundInstallCommand);
-      if (shouldSkipArg) continue;
-
+      // Skip flags and options
+      if (arg.startsWith("-")) continue;
+      
       const packageData = this.parsePackageArgument(arg);
       if (packageData) {
         packages.push(packageData);
@@ -161,14 +170,6 @@ Configuration:
     }
 
     return packages;
-  }
-
-  private updateInstallCommandStatus(arg: string, currentStatus: boolean): boolean {
-    return AppConfig.getInstallCommands().includes(arg) ? true : currentStatus;
-  }
-
-  private shouldSkipArgument(arg: string, foundInstallCommand: boolean): boolean {
-    return arg.startsWith("-") || !foundInstallCommand;
   }
 
   private parsePackageArgument(arg: string): PackageData | null {
