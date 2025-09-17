@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Legacy compatibility exports - using new SOLID architecture
-import { PackageValidatorFactory } from "./factories/PackageValidatorFactory";
+import { PackageValidatorFactory } from "../factories/PackageValidatorFactory";
 
 // Backward compatibility functions
 export async function checkPackageAge(packageName: string, requestedVersion?: string): Promise<boolean> {

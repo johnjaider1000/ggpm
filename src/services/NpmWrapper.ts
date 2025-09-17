@@ -4,10 +4,10 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-import { PackageData } from "./interfaces/IPackageValidator";
-import { IPackageValidator } from "./interfaces/IPackageValidator";
-import { PackageValidatorFactory } from "./factories/PackageValidatorFactory";
-import { AppConfig } from "./config/AppConfig";
+import { PackageData } from "../interfaces/IPackageValidator";
+import { IPackageValidator } from "../interfaces/IPackageValidator";
+import { PackageValidatorFactory } from "../factories/PackageValidatorFactory";
+import { AppConfig } from "../config/AppConfig";
 
 export class NpmWrapper {
   private readonly packageValidator: IPackageValidator;
@@ -92,7 +92,7 @@ Configuration:
 
     if (commandName === "ggpm") {
       // Auto-detect package manager
-      const detector = new (require("./services/PackageManagerDetector").PackageManagerDetector)();
+      const detector = new (require("./PackageManagerDetector").PackageManagerDetector)();
       return detector.detect();
     }
 

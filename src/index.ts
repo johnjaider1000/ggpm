@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { NpmWrapper } from "./npm-wrapper";
+import { NpmWrapper } from "./services/NpmWrapper";
 
 async function main(): Promise<void> {
   try {
