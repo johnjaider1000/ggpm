@@ -5,6 +5,7 @@ import { IConfigurationReader } from "../interfaces/IConfigurationReader";
 import { AppConfig } from "../config/AppConfig";
 
 export class ConfigurationReader implements IConfigurationReader {
+  private static hasShownConfigMessage = false;
 
   getMinimumReleaseAge(): number {
     const npmrcPath = this.getConfigPath();
@@ -40,12 +41,19 @@ export class ConfigurationReader implements IConfigurationReader {
       const configValue = this.parseConfigLine(line.trim());
       
       if (configValue !== null) {
-        console.log(`📋 Using minimum age from .npmrc: ${configValue} days`);
+        this.showConfigMessageOnce(configValue);
         return configValue;
       }
     }
     
     return null;
+  }
+
+  private showConfigMessageOnce(configValue: number): void {
+    if (!ConfigurationReader.hasShownConfigMessage) {
+      console.log(`📋 Using minimum age from .npmrc: ${configValue} days`);
+      ConfigurationReader.hasShownConfigMessage = true;
+    }
   }
 
   private parseConfigLine(line: string): number | null {
