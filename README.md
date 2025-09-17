@@ -57,17 +57,17 @@ minimum-release-age=7
 
 **Example configurations:**
 ```ini
-# Relaxed (development/testing)
-minimum-release-age=7
+# Development/Testing
+minimum-release-age=3
 
-# Moderate (good balance)
+# Production (recommended)
+minimum-release-age=14
+
+# Conservative production
 minimum-release-age=30
 
-# Conservative (recommended for production)
+# Enterprise/Critical systems
 minimum-release-age=90
-
-# Ultra-strict (enterprise/critical systems)
-minimum-release-age=365
 ```
 
 **Note:** The `.npmrc` file should be placed in your project root directory (same level as `package.json`).
