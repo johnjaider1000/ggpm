@@ -33,6 +33,14 @@
   "author": "John Jaider Vanegas Dueñas",
   "email": "contacto@starlly.com",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnjaider1000/ggpm.git"
+  },
+  "homepage": "https://github.com/johnjaider1000/ggpm",
+  "bugs": {
+    "url": "https://github.com/johnjaider1000/ggpm/issues"
+  },
   "dependencies": {
     "figlet": "1.8.0",
     "jsonc-parser": "3.3.1",
