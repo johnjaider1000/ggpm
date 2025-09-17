@@ -1,0 +1,16 @@
+/src
+/node_modules
+
+.DS_Store
+tsconfig.json
+tsconfig.node.json
+tsup.config.tsconfig
+HELPER.md
+README.md
+nodemon.json
+tsup.config.ts
+pnpm-lock.yaml
+.nvmrc
+.gitignore
+demo
+.github

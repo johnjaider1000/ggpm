@@ -1,0 +1,51 @@
+{
+  "name": "ggpm",
+  "version": "1.0.0",
+  "description": "Global guardian package manager",
+  "main": "dist/index.js",
+  "scripts": {
+    "bundle": "tsup",
+    "start": "node dist/index.js",
+    "dev": "nodemon"
+  },
+  "bin": {
+    "ggpm": "./dist/index.js",
+    "g/pnpm": "./dist/index.js",
+    "g/npm": "./dist/index.js",
+    "g/yarn": "./dist/index.js",
+    "g/bun": "./dist/index.js"
+  },
+  "keywords": [
+    "ggpm",
+    "global-guardian-package-manager",
+    "package-manager",
+    "npm",
+    "pnpm",
+    "yarn",
+    "bun",
+    "js-utils",
+    "codebase-maintenance",
+    "relative-imports",
+    "dev-tools",
+    "node.js",
+    "typescript-utilities"
+  ],
+  "author": "John Jaider Vanegas Dueñas",
+  "email": "contacto@starlly.com",
+  "license": "MIT",
+  "dependencies": {
+    "figlet": "1.8.0",
+    "jsonc-parser": "3.3.1",
+    "object-path": "0.11.8"
+  },
+  "devDependencies": {
+    "@types/figlet": "1.7.0",
+    "@types/node": "22.10.1",
+    "@types/object-path": "0.11.4",
+    "nodemon": "3.1.7",
+    "ts-node": "10.9.2",
+    "tsconfig-paths": "4.2.0",
+    "tsup": "8.0.2",
+    "typescript": "5.7.2"
+  }
+}
