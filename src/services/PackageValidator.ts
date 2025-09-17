@@ -24,13 +24,13 @@ export class PackageValidator implements IPackageValidator {
         return this.validateLatestVersion(packageName, packageInfo, minimumAge);
       }
     } catch (error) {
-      console.error(`❌ Error verificando ${packageName}:`, (error as Error).message);
+      console.error(`❌ Error validating ${packageName}:`, (error as Error).message);
       return false;
     }
   }
 
   async validatePackages(packages: PackageData[]): Promise<boolean> {
-    console.log("🔍 Verificando paquetes antes de la instalación...\n");
+    console.log("🔍 Validating packages before installation...\n");
 
     let allValid = true;
 
@@ -48,7 +48,7 @@ export class PackageValidator implements IPackageValidator {
     const packageJsonPath = path.join(process.cwd(), "package.json");
 
     if (!fs.existsSync(packageJsonPath)) {
-      console.error("❌ No se encontró package.json");
+      console.error("❌ package.json not found");
       process.exit(1);
     }
 
@@ -60,7 +60,7 @@ export class PackageValidator implements IPackageValidator {
     };
 
     const minimumAge = this.configurationReader.getMinimumReleaseAge();
-    console.log(`🔍 Verificando edad de paquetes (mínimo: ${minimumAge} días)...\n`);
+    console.log(`🔍 Validating package age (minimum: ${minimumAge} days)...\n`);
 
     let allValid = true;
 
@@ -75,11 +75,11 @@ export class PackageValidator implements IPackageValidator {
     }
 
     if (!allValid) {
-      console.error("\n❌ Algunos paquetes no cumplen con la edad mínima requerida");
+      console.error("\n❌ Some packages do not meet the minimum age requirement");
       process.exit(1);
     }
 
-    console.log("\n✅ Todos los paquetes cumplen con la edad mínima requerida");
+    console.log("\n✅ All packages meet the minimum age requirement");
   }
 
   private validateSpecificVersion(
@@ -112,7 +112,7 @@ export class PackageValidator implements IPackageValidator {
 
     const versionInfo = packageInfo.versions[versionToCheck];
     if (!versionInfo) {
-      console.error(`❌ Versión ${requestedVersion} no encontrada para ${packageName}`);
+      console.error(`❌ Version ${requestedVersion} not found for ${packageName}`);
       return false;
     }
 
@@ -122,12 +122,12 @@ export class PackageValidator implements IPackageValidator {
 
     if (age < minimumAge) {
       console.error(
-        `❌ ${packageName}@${versionToCheck} es demasiado reciente (${age} días). Mínimo requerido: ${minimumAge} días`
+        `❌ ${packageName}@${versionToCheck} is too recent (${age} days). Minimum required: ${minimumAge} days`
       );
       return false;
     }
 
-    console.log(`✅ ${packageName} cumple con la edad mínima requerida`);
+    console.log(`✅ ${packageName} meets the minimum age requirement`);
     return true;
   }
 
@@ -140,12 +140,12 @@ export class PackageValidator implements IPackageValidator {
 
     if (age < minimumAge) {
       console.error(
-        `❌ ${packageName}@${latestVersion} es demasiado reciente (${age} días). Mínimo requerido: ${minimumAge} días`
+        `❌ ${packageName}@${latestVersion} is too recent (${age} days). Minimum required: ${minimumAge} days`
       );
       return false;
     }
 
-    console.log(`✅ ${packageName} cumple con la edad mínima requerida`);
+    console.log(`✅ ${packageName} meets the minimum age requirement`);
     return true;
   }
 }

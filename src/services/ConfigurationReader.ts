@@ -11,7 +11,7 @@ export class ConfigurationReader implements IConfigurationReader {
 
     if (!fs.existsSync(npmrcPath)) {
       const defaultAge = AppConfig.getDefaultMinimumReleaseAge();
-      console.warn(`⚠️  No se encontró ${AppConfig.getConfigFileName()}, usando valor por defecto: ${defaultAge} días`);
+      console.warn(`⚠️  ${AppConfig.getConfigFileName()} not found, using default value: ${defaultAge} days`);
       return defaultAge;
     }
 
@@ -24,17 +24,17 @@ export class ConfigurationReader implements IConfigurationReader {
         if (trimmedLine.startsWith("minimum-release-age=")) {
           const value = parseInt(trimmedLine.split("=")[1]);
           if (!isNaN(value)) {
-            console.log(`📋 Usando edad mínima desde .npmrc: ${value} días`);
+            console.log(`📋 Using minimum age from .npmrc: ${value} days`);
             return value;
           }
         }
       }
 
       const defaultAge = AppConfig.getDefaultMinimumReleaseAge();
-      console.warn(`⚠️  No se encontró minimum-release-age en ${AppConfig.getConfigFileName()}, usando valor por defecto: ${defaultAge} días`);
+      console.warn(`⚠️  minimum-release-age not found in ${AppConfig.getConfigFileName()}, using default value: ${defaultAge} days`);
       return defaultAge;
     } catch (error) {
-      console.error(`❌ Error leyendo ${AppConfig.getConfigFileName()}:`, (error as Error).message);
+      console.error(`❌ Error reading ${AppConfig.getConfigFileName()}:`, (error as Error).message);
       return AppConfig.getDefaultMinimumReleaseAge();
     }
   }

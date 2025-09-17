@@ -37,11 +37,11 @@ export class NpmWrapper {
       const isValid = await this.packageValidator.validatePackages(packages);
 
       if (!isValid) {
-        console.error("\n❌ Instalación bloqueada por paquetes demasiado recientes");
+        console.error("\n❌ Installation blocked by packages that are too recent");
         process.exit(1);
       }
 
-      console.log("\n✅ Todos los paquetes son válidos, procediendo con la instalación...\n");
+      console.log("\n✅ All packages are valid, proceeding with installation...\n");
     }
   }
 

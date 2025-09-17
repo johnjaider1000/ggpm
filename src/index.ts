@@ -8,7 +8,7 @@ async function main(): Promise<void> {
     const app = ApplicationFactory.create(runWrapper);
     await app.run();
   } catch (error) {
-    console.error("❌ Error ejecutando ggpm:", (error as Error).message);
+    console.error("❌ Error executing ggpm:", (error as Error).message);
     process.exit(1);
   }
 }
