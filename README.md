@@ -69,6 +69,7 @@ minimum-release-age=30
 # Enterprise/Critical systems
 minimum-release-age=90
 ```
+ 📝 These are just suggested values — choose what makes sense for your project, team, or risk tolerance.
 
 **Note:** The `.npmrc` file should be placed in your project root directory (same level as `package.json`).
 
