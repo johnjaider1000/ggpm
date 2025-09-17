@@ -1,6 +1,6 @@
 {
   "name": "ggpm",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Global guardian package manager",
   "main": "dist/index.js",
   "scripts": {
