@@ -123,7 +123,7 @@ MIT License - see LICENSE file for details.
 
 If you encounter any issues or have questions about GGPM, please reach out:
 
-- **Email**: [jhonjaider100015@gmail.com](mailto:jhonjaider100015@gmail.com)
+- **Email**: [contacto@starlly.com](mailto:contacto@starlly.com)
 - **GitHub Issues**: Submit bug reports and feature requests
 
 ---
